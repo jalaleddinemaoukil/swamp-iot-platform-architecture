@@ -57,7 +57,7 @@ graph LR
 - IoT sensors publish telemetry via MQTT (QoS 1)
 - Node.js bridge service validates and batches messages
 - Supabase Edge Functions normalize and persist to PostgreSQL
-- WebSocket pushes real-time updates to React dashboard
+- WebSocket pushes real-time updates to the React dashboard
 - Zustand manages optimistic UI state
 
 👉 **[View detailed architecture diagrams](./assets/architecture-overview.md)**
