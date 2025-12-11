@@ -1,0 +1,54 @@
+Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)
+
+Copyright (c) 2025 Jalal Eddine Maoukil
+
+=== IMPORTANT NOTICE ===
+
+This repository contains ARCHITECTURE DOCUMENTATION ONLY for educational and 
+portfolio showcase purposes. It does NOT include any source code or implementation.
+
+The SWAMP (Smart Water & Agriculture Management Platform) concept, architecture, 
+design patterns, and all associated intellectual property are proprietary and 
+owned by Jalal Eddine Maoukil.
+
+=== PERMITTED USES ===
+
+You are permitted to:
+✓ View and study this documentation for educational purposes
+✓ Reference this work in academic or learning contexts
+✓ Link to this repository as an example of system architecture
+
+=== PROHIBITED USES ===
+
+You are NOT permitted to:
+✗ Use this architecture or concepts for commercial purposes
+✗ Implement or build a product based on this architecture without explicit permission
+✗ Create derivative works or modifications
+✗ Copy, redistribute, or republish this documentation
+✗ Use the SWAMP name, branding, or concepts in any product or service
+✗ Claim this work as your own or remove attribution
+
+=== DISCLAIMER ===
+
+This documentation is provided "AS IS" for educational purposes only. The author 
+makes no warranties about the completeness, reliability, or accuracy of this 
+information. The actual SWAMP platform implementation is proprietary and contains 
+additional features, optimizations, and security measures not disclosed here.
+
+Any use of this documentation is at your own risk. The author assumes no liability 
+for any damages or issues arising from viewing or studying this documentation.
+
+=== COMMERCIAL LICENSING ===
+
+If you wish to use this architecture, concepts, or designs for commercial purposes,
+you must obtain explicit written permission from the copyright holder.
+
+Contact: jalaleddinemaoukil@gmail.com
+
+=== FULL LICENSE TEXT ===
+
+This work is licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 
+4.0 International License. To view a copy of this license, visit:
+https://creativecommons.org/licenses/by-nc-nd/4.0/
+
+or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.

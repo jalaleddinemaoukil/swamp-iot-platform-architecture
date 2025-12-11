@@ -1,0 +1,163 @@
+# Sanitized CI/CD Pipeline Example for SWAMP Platform
+# This is a reference implementation showing the pipeline structure
+# All sensitive values use placeholders
+
+name: SWAMP Platform CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '18.x'
+  REGISTRY: ghcr.io
+
+jobs:
+  # Security scanning runs first
+  security-scan:
+    name: Security Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+      
+      - name: Trivy Vulnerability Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          severity: 'CRITICAL,HIGH'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Upload to Security Tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Frontend build and test
+  frontend-build:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    needs: security-scan
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run type-check
+      - run: npm test
+      - run: npm run build
+        env:
+          VITE_API_URL: ${{ secrets.API_URL }}
+      
+      - uses: actions/upload-artifact@v3
+        with:
+          name: frontend-dist
+          path: dist/
+
+  # Backend tests
+  backend-test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    needs: security-scan
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - run: npm ci
+        working-directory: ./backend
+      - run: npm test
+        working-directory: ./backend
+
+  # Docker build and push
+  docker-build:
+    name: Build Container
+    runs-on: ubuntu-latest
+    needs: [frontend-build, backend-test]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./mqtt-bridge
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ github.repository }}/mqtt-bridge:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Deploy to staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: docker-build
+    environment:
+      name: staging
+      url: https://staging.example.com
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy to Vercel
+        run: |
+          npx vercel deploy --token=${{ secrets.VERCEL_TOKEN }} --prod
+      
+      - name: Deploy Edge Functions
+        run: |
+          npx supabase functions deploy --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_TOKEN }}
+      
+      - name: Update ECS Service
+        run: |
+          aws ecs update-service \
+            --cluster iot-cluster \
+            --service mqtt-bridge \
+            --force-new-deployment
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
+
+  # Smoke tests
+  smoke-tests:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Health Check
+        run: |
+          curl -f https://staging.example.com/health || exit 1
+          curl -f https://api-staging.example.com/health || exit 1
+      
+      - name: E2E Tests
+        run: npm run test:e2e
+        env:
+          BASE_URL: https://staging.example.com
